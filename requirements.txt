@@ -12,7 +12,6 @@ keybert
 networkx
 scipy
 pymongo
-bson
 gudhi
 ripser
 certifi
