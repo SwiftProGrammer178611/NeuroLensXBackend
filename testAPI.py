@@ -1226,8 +1226,6 @@ def get_cluster_label(cluster_id: int) -> str:
     if doc and "label" in doc:
         return doc["label"]
     return "unknown"
-
-
 @app.get("/recommendations/{query}")
 async def get_recommendations(query: str):
     # Reuse summary from latest analysis or construct a mock one
@@ -1241,6 +1239,10 @@ High ratio found in Layer 11 (1.9x bias difference)
     lines = [line.strip("-• ").strip() for line in raw.split("\n") if line.strip()]
     return {"recommendations": lines}
 
+# Add this at the very end of testAPI.py
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+# For Vercel deployment
+app = app  # Make sure 'app' is available at module level
