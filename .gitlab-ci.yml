@@ -1,0 +1,52 @@
+variables:
+  BASE_URL: "http://127.0.0.1:8000"  # Replace with production URL when deploying
+  DEFAULT_QUERY: "$CI_COMMIT_MESSAGE"  # Dynamically grabs the latest commit message
+  DEFAULT_CAVS: '["profession", "gender", "bias", "doctor", "nurse"]'
+  CLUSTER_COUNT: "5"
+
+stages:
+  - analyze
+  - recommend
+  - issue
+
+analyze-model:
+  stage: analyze
+  script:
+    - echo "Running model analysis..."
+    - echo "Triggering GitLab-aware model update..."
+    - curl -X POST "$BASE_URL/trigger-gitlab-update" \
+        -H "Content-Type: application/json" \
+        -d "{\"repo_url\": \"$CI_PROJECT_URL\"}"
+
+    - curl -X POST "$BASE_URL/analyze-query" \
+        -H "Content-Type: application/json" \
+        -d '{
+              "query": "'"$DEFAULT_QUERY"'",
+              "selected_cavs": '"$DEFAULT_CAVS"',
+              "num_clusters": '"$CLUSTER_COUNT"',
+              "model_name": "bert-base-uncased",
+              "graph_strategy": "Top by Activation",
+              "max_nodes_graph": 200
+            }'
+  only:
+    changes:
+      - models/**/*
+      - scripts/**/*
+
+generate-recommendations:
+  stage: recommend
+  script:
+    - echo "Generating updated recommendations..."
+    - curl -G --data-urlencode "query=$DEFAULT_QUERY" "$BASE_URL/recommendations"
+  needs:
+    - analyze-model
+
+auto-create-label-issue:
+  stage: issue
+  script:
+    - echo "Creating GitLab issues for unlabeled clusters..."
+    - curl -X POST "$BASE_URL/label-reminder"
+  only:
+    - main
+  needs:
+    - generate-recommendations

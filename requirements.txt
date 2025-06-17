@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+pymongo
+certifi
+python-dotenv
+python-gitlab
+google-cloud-aiplatform
+vertexai
+transformers
+torch
+scikit-learn
+matplotlib
+python-dotenv
